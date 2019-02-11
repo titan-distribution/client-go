@@ -16,9 +16,31 @@ package client
 
 import (
 	"net/http"
+	"time"
 )
+
+// DefaultTransport is the optional transport clients use when a NewClient
+// recieves a nil parameter.
+var DefaultTransport = http.Transport{ResponseHeaderTimeout: time.Second}
 
 // Client is an implementation of http.RoundTripper.
 type Client struct {
 	Transport http.RoundTripper
+}
+
+// NewClient returns a fully initialized Client.
+func NewClient(t http.RoundTripper) *Client {
+	var client *Client
+	if t != nil {
+		client.Transport = t
+	} else {
+		client.Transport = &DefaultTransport
+	}
+	return client
+}
+
+// RoundTrip is the Client implementation of http.RoundTripper. Used to cache
+// responses from a registry.
+func (c *Client) RoundTrip(req *http.Request) (resp *http.Response, err error) {
+	return c.Transport.RoundTrip(req)
 }
